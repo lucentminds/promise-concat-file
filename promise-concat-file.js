@@ -31,14 +31,13 @@ var concat = module.exports = function( aFiles, cDest, oOptions, undefined ){
 
 
     resolvePath( cDest )
-    .then(function( cResolved ){;
+    .then(function( cResolved ){
         cPathDest = cResolved;
 
         try{
             fs.writeFileSync( cPathDest, oSettings.header );
         }
         catch( e ) {
-            cons
             throwError( e );
             return;
         }
