@@ -6,6 +6,7 @@
 
 
 /** List jshint ignore directives here. **/
+/* jshint undef: true, unused: true */
 /* jslint node: true */
 /* global JSON:false */
 
