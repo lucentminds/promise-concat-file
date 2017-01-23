@@ -1,4 +1,4 @@
-# promise-concat-file
+# promise-file-concat
 NodeJs module that concatenates a list of files.
 
 ## Installation
@@ -6,13 +6,13 @@ NodeJs module that concatenates a list of files.
 Install by npm.
 
 ```shell
-npm install git+https://github.com/lucentminds/promise-concat-file.git
+npm install git+https://github.com/lucentminds/promise-file-concat.git
 ```
 
 ### Useage:
 
 ```js
-var concatFile = require( 'promise-concat-file' );
+var concatFile = require( 'promise-file-concat' );
 var cPathDestination = './temp/webwelcomer-modules.js';
 var aSourcePaths = [ 
     "./modules/jquery-widgetfactory/build/jquery-widgetfactory.js",

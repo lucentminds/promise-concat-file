@@ -1,8 +1,8 @@
 {
-  "name": "promise-concat-file",
+  "name": "promise-file-concat",
   "date": "01-05-2017",
   "description": "NodeJs module that concatenates a list of files.",
-  "main": "promise-concat-file.js",
+  "main": "promise-file-concat.js",
   "author": {
     "name": "Scott Johnson"
   },
@@ -13,7 +13,7 @@
 	},
   "repository": {
     "type": "git",
-    "url": "https://github.com/lucentminds/promise-concat-file.git"
+    "url": "https://github.com/lucentminds/promise-file-concat.git"
   },
   "dependencies": {
     "promise-resolve-path": "git+https://github.com/lucentminds/promise-resolve-path.git",
