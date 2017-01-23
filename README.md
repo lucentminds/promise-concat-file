@@ -1,6 +1,13 @@
 # promise-concat-file
 NodeJs module that concatenates a list of files.
 
+## Installation
+
+Install by npm.
+
+```shell
+npm install git+https://github.com/lucentminds/promise-concat-file.git
+```
 
 ### Useage:
 
