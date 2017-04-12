@@ -117,12 +117,14 @@ var readFile = function( cFilePath ){
     var deferred = Q.defer();
 
     fs.readFile( cFilePath, function ( err, buffer ) {
-        var cContent = buffer.toString( 'utf8' );
-
+        var cContent;
+        
         if ( err ){
             return deferred.reject( err );
         }
-
+        
+        cContent = buffer.toString( 'utf8' );
+        
         deferred.resolve({
             path: cFilePath,
             buffer: buffer
