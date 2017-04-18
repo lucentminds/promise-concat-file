@@ -102,7 +102,6 @@ var concat = module.exports = function( aFiles, cDest, oOptions, undefined ){
     })
     .fail( function( err ){
         // One rejected.
-        console.log( 'err' );
         return throwError( err );
     });
 
