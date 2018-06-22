@@ -68,8 +68,10 @@ var concat = module.exports = function( aFiles, cDest, oOptions, undefined ){
             cContent = '';
 
             if( oSettings.prependSourcePath || oSettings.prependDatetime ){
+               cContent = cContent.concat( '\n' );
+
                if( oSettings.commentBlock ) {
-                  cContent = cContent.concat( '\n', oSettings.commentBlock[ 0 ], '\n' );
+                  cContent = cContent.concat( oSettings.commentBlock[ 0 ], '\n' );
                }
 
                if( oSettings.prependDatetime ){
@@ -93,6 +95,7 @@ var concat = module.exports = function( aFiles, cDest, oOptions, undefined ){
                if( oSettings.commentBlock ) {
                   cContent = cContent.concat( oSettings.commentBlock[ 1 ] );
                }
+
                cContent = cContent.concat( '\n' );
             }
 
