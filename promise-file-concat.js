@@ -15,97 +15,114 @@ var Q = require( 'q' );
 var resolvePath = require( 'promise-resolve-path' );
 
 var concat = module.exports = function( aFiles, cDest, oOptions, undefined ){
-    var deferred = Q.defer();
-    var cPathDest;
-    var cError;
-    var aPathSources;
-    var throwError = function( cError ){
-        deferred.reject( cError );
-    };// /throwError()
+   var deferred = Q.defer();
+   var cPathDest;
+   var cError;
+   var aPathSources;
+   var throwError = function( cError ){
+      deferred.reject( cError );
+   };// /throwError()
 
-    var oSettings = Object.assign({
-        addSourcePath: false,
-        commentBlock: [ '/**', '**/'],
-        header: '',
-        footer: ''
-    }, oOptions );
+   var oSettings = Object.assign({
+      addSourcePath: false,
+      commentBlock: [ '/**', '**/'],
+      commentLine: null,
+      header: '',
+      footer: ''
+   }, oOptions );
 
 
-    resolvePath( cDest )
-    .then(function( cResolved ){
-        cPathDest = cResolved;
+   resolvePath( cDest )
+   .then(function( cResolved ){
+      cPathDest = cResolved;
 
-        try{
+      try{
             fs.writeFileSync( cPathDest, oSettings.header );
-        }
-        catch( e ) {
+      }
+      catch( e ) {
             throwError( e );
             return;
-        }
+      }
 
-        return resolvePath( aFiles, true );
-        
-    })
-    .then(function( aResolved ){
-        var i, l, aPromises = [];
-        aPathSources = aResolved;
+      return resolvePath( aFiles, true );
+      
+   })
+   .then(function( aResolved ){
+      var i, l, aPromises = [];
+      aPathSources = aResolved;
 
-        for( i = 0, l = aPathSources.length; i < l; i++ ) {
+      for( i = 0, l = aPathSources.length; i < l; i++ ) {
             aPromises.push( readFile( aPathSources[ i ] ) );
-        }// /for()
-        
-        return Q.all( aPromises );
-    })
-    .then( function( aResults ){
-        // All read.
-        var i, l, cContent;
-        var dt = new Date();
-        var err;        
+      }// /for()
+      
+      return Q.all( aPromises );
+   })
+   .then( function( aResults ){
+      // All read.
+      var i, l, cContent;
+      var dt = new Date();
+      var err;        
 
-        // Loop over each result and append it's buffer string.
-        for( i = 0, l = aResults.length; i < l; i++ ) {
+      // Loop over each result and append it's buffer string.
+      for( i = 0, l = aResults.length; i < l; i++ ) {
             cContent = '';
 
             if( oSettings.prependSourcePath || oSettings.prependDatetime ){
-                cContent = cContent.concat( '\n', oSettings.commentBlock[ 0 ], '\n' );
+               if( oSettings.commentBlock ) {
+                  cContent = cContent.concat( '\n', oSettings.commentBlock[ 0 ], '\n' );
+               }
 
-                if( oSettings.prependDatetime ){
-                    cContent = cContent.concat( dt, '\n' );
-                }
+               if( oSettings.prependDatetime ){
 
-                if( oSettings.prependSourcePath ){
-                    cContent = cContent.concat( aResults[ i ].path, '\n' );
-                }
-                cContent = cContent.concat( oSettings.commentBlock[ 1 ], '\n' );
+                  if( oSettings.commentLine ) {
+                        cContent = cContent.concat( oSettings.commentLine );
+                  }
+
+                  cContent = cContent.concat('build time: ',  dt, '\n' );
+               }
+
+               if( oSettings.prependSourcePath ){
+
+                  if( oSettings.commentLine ) {
+                        cContent = cContent.concat( oSettings.commentLine );
+                  }
+
+                  cContent = cContent.concat( 'build source: ', aResults[ i ].path, '\n' );
+               }
+
+               if( oSettings.commentBlock ) {
+                  cContent = cContent.concat( oSettings.commentBlock[ 1 ] );
+               }
+               cContent = cContent.concat( '\n' );
             }
 
             cContent = cContent.concat( aResults[ i ].buffer.toString( 'utf8' ) );
             err = appendFileSync( cPathDest, cContent );
 
             if( err ) {
-                return throwError( err );
+               return throwError( err );
             }
-        }// /for()
+      }// /for()
 
-        if( oSettings.footer ){
+      if( oSettings.footer ){
             err = appendFileSync( cPathDest, oSettings.footer );
 
             if( err ) {
-                return throwError( err );
+               return throwError( err );
             }
-        }
+      }
 
-       deferred.resolve({
-           src: aPathSources,
-           dest: cPathDest
-       });
-    })
-    .fail( function( err ){
-        // One rejected.
-        return throwError( err );
-    });
+      deferred.resolve({
+         src: aPathSources,
+         dest: cPathDest
+      });
+   })
+   .fail( function( err ){
+      // One rejected.
+      return throwError( err );
+   });
 
-    return deferred.promise;
+   return deferred.promise;
 
 };// /concat()
 
@@ -113,33 +130,33 @@ var concat = module.exports = function( aFiles, cDest, oOptions, undefined ){
 
 
 var readFile = function( cFilePath ){
-    var deferred = Q.defer();
+   var deferred = Q.defer();
 
-    fs.readFile( cFilePath, function ( err, buffer ) {
-        var cContent;
-        
-        if ( err ){
+   fs.readFile( cFilePath, function ( err, buffer ) {
+      var cContent;
+      
+      if ( err ){
             return deferred.reject( err );
-        }
-        
-        cContent = buffer.toString( 'utf8' );
-        
-        deferred.resolve({
+      }
+      
+      cContent = buffer.toString( 'utf8' );
+      
+      deferred.resolve({
             path: cFilePath,
             buffer: buffer
-        });
-    });
+      });
+   });
 
-    return deferred.promise;
+   return deferred.promise;
 };// /readFile()
 
 var appendFileSync = function( cPathDest, cContent ){
-    try{
-        fs.appendFileSync( cPathDest, cContent );
-    }
-    catch( e ) {
-        return e;
-    }
+   try{
+      fs.appendFileSync( cPathDest, cContent );
+   }
+   catch( e ) {
+      return e;
+   }
 };// /appendFileSync()
 
 
