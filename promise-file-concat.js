@@ -8,23 +8,25 @@
 /** List jshint ignore directives here. **/
 /* jshint undef: true, unused: true */
 /* jslint node: true */
-/* global JSON:false */
+/* jshint esversion: 6 */
+/* eslint-env es6 */
 
-var fs = require( 'fs' );
-var Q = require( 'q' );
-var resolvePath = require( 'promise-resolve-path' );
+const fs = require( 'fs' );
+const Q = require( 'q' );
+const resolvePath = require( 'promise-resolve-path' );
 
-var concat = module.exports = function( aFiles, cDest, oOptions, undefined ){
+const concat = module.exports = function( aFiles, cDest, oOptions, undefined ){ // jshint ignore:line
    var deferred = Q.defer();
    var cPathDest;
-   var cError;
    var aPathSources;
    var throwError = function( cError ){
       deferred.reject( cError );
    };// /throwError()
 
    var oSettings = Object.assign({
-      addSourcePath: false,
+      prependSourcePath: false,
+      prependDatetime: false,
+      prependString: '',
       commentBlock: [ '/**', '**/'],
       commentLine: null,
       header: '',
@@ -61,50 +63,59 @@ var concat = module.exports = function( aFiles, cDest, oOptions, undefined ){
       // All read.
       var i, l, cContent;
       var dt = new Date();
-      var err;        
+      var err;
 
       // Loop over each result and append it's buffer string.
       for( i = 0, l = aResults.length; i < l; i++ ) {
-            cContent = '';
+         cContent = '';
 
-            if( oSettings.prependSourcePath || oSettings.prependDatetime ){
-               cContent = cContent.concat( '\n' );
+         if( oSettings.prependSourcePath || oSettings.prependDatetime ){
+            cContent = cContent.concat( '\n' );
 
-               if( oSettings.commentBlock ) {
-                  cContent = cContent.concat( oSettings.commentBlock[ 0 ], '\n' );
-               }
-
-               if( oSettings.prependDatetime ){
-
-                  if( oSettings.commentLine ) {
-                        cContent = cContent.concat( oSettings.commentLine );
-                  }
-
-                  cContent = cContent.concat('build time: ',  dt, '\n' );
-               }
-
-               if( oSettings.prependSourcePath ){
-
-                  if( oSettings.commentLine ) {
-                        cContent = cContent.concat( oSettings.commentLine );
-                  }
-
-                  cContent = cContent.concat( 'build source: ', aResults[ i ].path, '\n' );
-               }
-
-               if( oSettings.commentBlock ) {
-                  cContent = cContent.concat( oSettings.commentBlock[ 1 ] );
-               }
-
-               cContent = cContent.concat( '\n' );
+            if( oSettings.commentBlock ) {
+               cContent = cContent.concat( oSettings.commentBlock[ 0 ], '\n' );
             }
 
-            cContent = cContent.concat( aResults[ i ].buffer.toString( 'utf8' ) );
-            err = appendFileSync( cPathDest, cContent );
+            if( oSettings.prependString ){
 
-            if( err ) {
-               return throwError( err );
+               if( oSettings.commentLine ) {
+                  cContent = cContent.concat( oSettings.commentLine );
+               }
+
+               cContent = cContent.concat( `${oSettings.prependString}\n` );
             }
+
+            if( oSettings.prependDatetime ){
+
+               if( oSettings.commentLine ) {
+                  cContent = cContent.concat( oSettings.commentLine );
+               }
+
+               cContent = cContent.concat( 'build time: ',  dt, '\n' );
+            }
+
+            if( oSettings.prependSourcePath ){
+
+               if( oSettings.commentLine ) {
+                  cContent = cContent.concat( oSettings.commentLine );
+               }
+
+               cContent = cContent.concat( 'build source: ', aResults[ i ].path, '\n' );
+            }
+
+            if( oSettings.commentBlock ) {
+               cContent = cContent.concat( oSettings.commentBlock[ 1 ] );
+            }
+
+            cContent = cContent.concat( '\n' );
+         }
+
+         cContent = cContent.concat( aResults[ i ].buffer.toString( 'utf8' ) );
+         err = appendFileSync( cPathDest, cContent );
+
+         if( err ) {
+            return throwError( err );
+         }
       }// /for()
 
       if( oSettings.footer ){
