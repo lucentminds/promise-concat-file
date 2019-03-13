@@ -30,7 +30,8 @@ const concat = module.exports = function( aFiles, cDest, oOptions, undefined ){ 
       commentBlock: [ '/**', '**/'],
       commentLine: null,
       header: '',
-      footer: ''
+      footer: '',
+      map: null
    }, oOptions );
 
 
@@ -39,11 +40,11 @@ const concat = module.exports = function( aFiles, cDest, oOptions, undefined ){ 
       cPathDest = cResolved;
 
       try{
-            fs.writeFileSync( cPathDest, oSettings.header );
+         fs.writeFileSync( cPathDest, oSettings.header );
       }
       catch( e ) {
-            throwError( e );
-            return;
+         throwError( e );
+         return;
       }
 
       return resolvePath( aFiles, true );
@@ -54,44 +55,73 @@ const concat = module.exports = function( aFiles, cDest, oOptions, undefined ){ 
       aPathSources = aResolved;
 
       for( i = 0, l = aPathSources.length; i < l; i++ ) {
-            aPromises.push( readFile( aPathSources[ i ] ) );
+         aPromises.push( readFile( aPathSources[ i ] ) );
       }// /for()
       
       return Q.all( aPromises );
    })
-   .then( function( aResults ){
+   .then( function( a_results ){      
       // All read.
+      var i, l, o_prom, a_prom = [];
+
+      var after_map = function( c_result ){
+         this.buffer = c_result;
+      };// /after_map()
+
+      // Loop over each result and append it's buffer string.
+      for( i = 0, l = a_results.length; i < l; i++ ) {
+         a_results[ i ].buffer = a_results[ i ].buffer.toString( 'utf8' );
+
+         if( oSettings.map ) {
+            o_prom = Q( oSettings.map( a_results[ i ].buffer ) )
+            .then( after_map.bind( a_results[i] ) );
+            a_prom.push( o_prom );
+         }
+      }// /for()
+
+      return Q.all( a_prom )
+      .then(function(){
+         return a_results;
+      });
+
+   })
+   .then( function( aResults ){
+      // All ready.
       var i, l, cContent;
       var dt = new Date();
       var err;
+      var c_prepend_string = oSettings.prependString;
+      var c_prepend_datetime = oSettings.prependDatetime;
 
       // Loop over each result and append it's buffer string.
       for( i = 0, l = aResults.length; i < l; i++ ) {
          cContent = '';
 
-         if( oSettings.prependSourcePath || oSettings.prependDatetime ){
+         if( oSettings.prependSourcePath || c_prepend_datetime || c_prepend_string ){
             cContent = cContent.concat( '\n' );
 
             if( oSettings.commentBlock ) {
                cContent = cContent.concat( oSettings.commentBlock[ 0 ], '\n' );
             }
 
-            if( oSettings.prependString ){
+            if( c_prepend_string ){
 
                if( oSettings.commentLine ) {
                   cContent = cContent.concat( oSettings.commentLine );
                }
 
-               cContent = cContent.concat( `${oSettings.prependString}\n` );
+               cContent = cContent.concat( `${c_prepend_string}\n` );
+               c_prepend_string = '';
             }
 
-            if( oSettings.prependDatetime ){
+            if( c_prepend_datetime ){
 
                if( oSettings.commentLine ) {
                   cContent = cContent.concat( oSettings.commentLine );
                }
 
                cContent = cContent.concat( 'build time: ',  dt, '\n' );
+               c_prepend_datetime = false;
             }
 
             if( oSettings.prependSourcePath ){
@@ -110,7 +140,7 @@ const concat = module.exports = function( aFiles, cDest, oOptions, undefined ){ 
             cContent = cContent.concat( '\n' );
          }
 
-         cContent = cContent.concat( aResults[ i ].buffer.toString( 'utf8' ) );
+         cContent = cContent.concat( aResults[ i ].buffer );
          err = appendFileSync( cPathDest, cContent );
 
          if( err ) {
@@ -119,11 +149,11 @@ const concat = module.exports = function( aFiles, cDest, oOptions, undefined ){ 
       }// /for()
 
       if( oSettings.footer ){
-            err = appendFileSync( cPathDest, oSettings.footer );
+         err = appendFileSync( cPathDest, oSettings.footer );
 
-            if( err ) {
-               return throwError( err );
-            }
+         if( err ) {
+            return throwError( err );
+         }
       }
 
       deferred.resolve({
